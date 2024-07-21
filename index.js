@@ -1,14 +1,26 @@
 const express = require("express");
-const {mongoConnect} = require("./connection");
+const {connectMongoDB} = require("./connection");
 const app = express();
-const port = 8002;
-const RouterURL = require("./routes/url");
-
+const port = 8000;
+const routerURL = require("./routes/url");
+const URL = require("./models/url");
+app.use(express.json());
 app.use("/url",routerURL);
-mongoConnect("mongodb://localhost/27017/short-url").then(()=>{console.log("MongoDb Connect")});
+app.get("/:shortId",async (req,res)=>{
+    const shortId = req.params.shortId;
+  const entry =  await URL.findOneAndUpdate({
+        shortId
+    },{$push:{
+        visitHistory:{timestamp: Date.now(),}
+    },});
+res.redirect(entry.redirectURL);
+})
+connectMongoDB("mongodb://0.0.0.0:27017/shortUrl").then(()=>{console.log("MongoDb Connect")}).catch((error)=>{
+    console.log(error)
+});
 
 app.listen(port,()=>{
-    console.log("server started at port 8002");
+    console.log("server started at port 8000");
 
     
 })
